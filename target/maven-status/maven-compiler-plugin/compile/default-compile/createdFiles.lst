@@ -1,0 +1,10 @@
+com\albares\clothes\utils\DbPool.class
+com\albares\clothes\utils\Db.class
+com\albares\clothes\utils\Response.class
+com\albares\clothes\utils\Secrets.class
+com\albares\clothes\api\UserService.class
+com\albares\clothes\utils\Parameters.class
+com\albares\clothes\api\AdminService.class
+com\albares\clothes\db\Product.class
+com\albares\clothes\utils\ResponseCodes.class
+com\albares\clothes\api\Api.class
