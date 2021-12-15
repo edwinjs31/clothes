@@ -1,9 +1,7 @@
 package com.albares.clothes.api;
 
 import com.albares.clothes.db.Product;
-import com.albares.clothes.utils.Db;
-import com.albares.clothes.utils.Response;
-import com.albares.clothes.utils.ResponseCodes;
+import com.albares.clothes.utils.*;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -52,7 +50,7 @@ public class UserService {
             p.setGender(gender);
             Db myDb = new Db();
             myDb.connect();
-            r.setProducts(p.selectProductsStock_DB(myDb));
+            r.setProducts(p.selectProducts_DB(myDb));
             myDb.disconnect();
 
             r.setResponseCode(ResponseCodes.OK);

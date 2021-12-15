@@ -21,7 +21,7 @@ public class Product {
     private Integer quantity;
 
     public Product() {
-        //this.quantity=0;
+
     }
 
     public Product(Integer id, String name, Integer price, Integer stock, Integer gender) {
@@ -80,7 +80,7 @@ public class Product {
         this.quantity = quantity;
     }
 
-    //INSERT Producto
+    //INSERT Product
     public int insertAndGetId_DB(Db myDb) throws SQLException, NoSuchAlgorithmException {
         PreparedStatement ps = myDb.prepareStatement(
                 "INSERT INTO products (name, price, stock, gender) VALUES (?, ?, ?, ?) returning id;"
@@ -96,66 +96,87 @@ public class Product {
     }
 
     //SELECT products
-    public static List selectProducts_DB(Db myDb) throws SQLException {
-        PreparedStatement ps = myDb.prepareStatement(
-                "SELECT id, name, price, stock, gender FROM products WHERE stock >=1;");
-
-        ResultSet rs = myDb.executeQuery(ps);
+    public List selectProducts_DB(Db myDb) throws SQLException {
         List<Product> products = new ArrayList();
+        //Si consultamos por genero,devuelve la lista de productos por genero y con stock
+        if (this.getGender() != null) {
+            PreparedStatement ps = myDb.prepareStatement("SELECT id, name, price, stock, gender FROM products WHERE stock > 0 AND gender=?;");
+            ps.setInt(1, this.getGender());
+            ResultSet rs = myDb.executeQuery(ps);
+            while (rs.next()) {
+                Product product = new Product(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5));
+                products.add(product);
+            }
 
-        while (rs.next()) {
-            Product product = new Product(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5));
-            products.add(product);
+            //sino devuelve una lista general de todos los productos con stock
+        } else {
+            PreparedStatement ps = myDb.prepareStatement("SELECT id, name, price, stock, gender FROM products;");
+            ResultSet rs = myDb.executeQuery(ps);
+            while (rs.next()) {
+                Product product = new Product(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5));
+                products.add(product);
+            }
         }
         return products;
     }
 
     //UPDATE product
     public void updateProduct_DB(Db myDb) throws SQLException {
+        //primero hacemos un select
+        PreparedStatement ps = myDb.prepareStatement("SELECT name, price, stock, gender FROM products WHERE id=?;");
+        ps.setInt(1, this.getId());
+        ResultSet rs = myDb.executeQuery(ps);
+        //guardamos en las siguientes variables
+        String nombre = null;
+        Integer precio = null, stock = null, genero = null;
+        while (rs.next()) {
+            nombre = rs.getString(1);
+            precio = rs.getInt(2);
+            stock = rs.getInt(3);
+            genero = rs.getInt(4);
 
-        if (this.getName() == null || this.getGender() == null) {
-            PreparedStatement ps = myDb.prepareStatement("UPDATE products SET price=?, stock=? WHERE id = ?;");
-            ps.setInt(1, this.getPrice());
-            ps.setInt(2, this.getStock());
-            ps.setInt(3, this.getId());
-            ps.executeUpdate();
-        } else {
-            PreparedStatement ps = myDb.prepareStatement("UPDATE products SET name=?, price=?, stock=?, gender = ? WHERE id = ?;");
-            ps.setString(1, this.getName());
-            ps.setInt(2, this.getPrice());
-            ps.setInt(3, this.getStock());
-            ps.setInt(4, this.getGender());
-            ps.setInt(5, this.getId());
-            ps.executeUpdate();
         }
+        
+        //despues el update en funcion de los campos que se quiera modificar
+        PreparedStatement p = myDb.prepareStatement("UPDATE products SET name=?, price=?, stock=?, gender = ? WHERE id = ?;");
+        p.setInt(5, this.getId());
+        if (this.getName() != null) {
+            p.setString(1, this.getName());
+        } else {
+            p.setString(1, nombre);
 
+        }
+        if (this.getPrice() != null) {
+            p.setInt(2, this.getPrice());
+
+        } else {
+            p.setInt(2, precio);
+        }
+        if (this.getStock() != null) {
+            p.setInt(3, this.getStock());
+
+        } else {
+            p.setInt(3, stock);
+        }
+        if (this.getGender() != null) {
+            p.setInt(4, this.getGender());
+
+        } else {
+            p.setInt(4, genero);
+
+        }
+        p.executeUpdate();
     }
 
     //UPDATE: devuelve el numero de registros actualizados
     public int updateStock(Db myDb, Product p) throws SQLException {
         //no resta la cantidad a comprar si el stock es inferior a dicha cantidad
         PreparedStatement ps = myDb.prepareStatement(
-                "UPDATE products SET stock = stock - ? WHERE ( SELECT stock >= ? WHERE id = ?);"
+                "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?;"
         );
         ps.setInt(1, p.getQuantity());
-        ps.setInt(2, p.getQuantity());
-        ps.setInt(3, p.getId());
+        ps.setInt(2, p.getId());
+        ps.setInt(3, p.getQuantity());
         return ps.executeUpdate();
-    }
-
-    //SELECT products con stock
-    public List selectProductsStock_DB(Db myDb) throws SQLException {
-        // SELECT id, name, price, stock, gender FROM products WHERE stock >= 1 and gender= 1;
-        PreparedStatement ps = myDb.prepareStatement(
-                "SELECT id, name, price, stock, gender FROM products WHERE stock>=1 AND gender=?;");
-        ps.setInt(1, this.getGender());
-        ResultSet rs = myDb.executeQuery(ps);
-        List<Product> products = new ArrayList();
-
-        while (rs.next()) {
-            Product product = new Product(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5));
-            products.add(product);
-        }
-        return products;
     }
 }
